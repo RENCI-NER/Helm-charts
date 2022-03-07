@@ -1,0 +1,96 @@
+#
+# This deployment can be used for running jupyter enabled mode for
+# Actual running please use a job instead
+#
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nemo-helm.fullname" . }}
+  labels:
+    {{- include "nemo-helm.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.jupyter.service.type }}
+  ports:
+    - port: {{ .Values.jupyter.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "nemo-helm.selectorLabels" . | nindent 4 }}
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nemo-helm.fullname" . }}
+  labels:
+    {{- include "nemo-helm.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "nemo-helm.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.jupyter.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "nemo-helm.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.jupyter.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.jupyter.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: {{ .Chart.Name }}-git-sync
+          image: alpine/git
+          args:
+            - clone
+            - {{ .Values.jupyter.codeRepo }}
+            - "/code/"
+          volumeMounts:
+            - name: code-dir
+              mountPath: /code/
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.jupyter.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.jupyter.resources | nindent 12 }}
+          command:
+            - jupyter
+          args:
+            - notebook
+            - "--ip=*"
+            - --NotebookApp.password={{ .Values.jupyter.password }}
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8888
+          volumeMounts:
+            - name: code-dir
+              mountPath: "/code/"
+      volumes:
+        - name: code-dir
+          emptyDir: {}
+
+
+      {{- with .Values.jupyter.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jupyter.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.jupyter.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
