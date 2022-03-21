@@ -14,14 +14,44 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+trainer:
+  gitSync: false
+  codeRepo: "https://github.com/RENCI-NER/nemo-ner.git"
+  initResources:
+    requests:
+      cpu: 1
+      memory: 2Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  resources:
+    requests:
+      cpu: 5
+      memory: 30Gi
+      ephemeral-storage: 10Gi
+    limits:
+      cpu: 5
+      memory: 50Gi
+      ephemeral-storage: 10Gi
 
-
+  trainingSets:
+    - https://stars.renci.org/var/ner/medmentions/medmentions-train.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-train.labels.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-train.categories.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-dev.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-dev.labels.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-dev.categories.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-test.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-test.labels.txt
+    - https://stars.renci.org/var/ner/medmentions/medmentions-test.categories.txt
+  storage:
+    dataStorageSize: 10Gi
+    experimentsStorageSize: 20Gi
+    scratchStorageSize: 100Gi
+    codeDirStorageSize: 1Gi
 jupyter:
   enabled: true
-  codeRepo: "https://github.com/RENCI-NER/nemo-ner.git"
-  storage:
-  ephermalStorage:
-  password:
+
   podAnnotations: {}
   podSecurityContext: {}
   # fsGroup: 2000
@@ -75,9 +105,3 @@ jupyter:
       #   cpu: 100m
       #   memory: 128Mi
 
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}

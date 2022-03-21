@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ include "nemo-helm.fullname" . }}-scripts"
+data:
+  download-training-files.sh: |-
+    #!/bin/sh -x
+    export DATA_DIR="${DATA_DIR}:=/data"
+    {{ range .Values.trainer.trainingSets }}
+    wget --directory-prefix $DATA_DIR  $node_file_url
+    {{ end }}
+    cd $DATA_DIR
+    ls -al $DATA_DIR
+    echo "FINISHED"

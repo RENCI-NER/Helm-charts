@@ -1,0 +1,91 @@
+{{- $fullName := include "nemo-helm.fullname" . -}}
+{{- $image := .Values.image.repository }}
+{{- $imageTag := .Values.image.tag }}
+{{- $pullPolicy := .Values.imagePullPolicy }}
+{{- $resources := .Values.trainer.resources }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ $fullName }}-kgx-load-job"
+spec:
+  template:
+    metadata:
+      name: "{{ $fullName }}-train-job"
+    spec:
+      initContainers:
+        - name: download-ds
+          image: busybox
+          command:
+          - "/download-data-set.sh"
+          volumeMounts:
+          - mountPath: /data
+            name: "scratch-volume"
+          - mountPath: /download-data-set.sh
+            name: "scripts"
+            subPath: "download-training-files.sh"
+          {{ with .Values.trainer.initResources }}
+          resources:  {{ . | toYaml | nindent 12 }}
+          {{ end }}
+      {{ if .Values.trainer.gitSync }}
+        - name: {{ .Chart.Name }}-git-sync
+          image: alpine/git
+          args:
+            - clone
+            - {{ .Values.trainer.codeRepo }}
+            - "/code/"
+          volumeMounts:
+            - name: code-dir
+              mountPath: /code/
+          {{ with .Values.trainer.initResources }}
+          resources:  {{ . | toYaml | nindent 12 }}
+          {{ end }}
+      {{ end }}
+      containers:
+        - name: loader-container
+          image: "{{ $image }}:{{ $imageTag }}"
+          imagePullPolicy: {{ $pullPolicy }}
+          command:
+          - /bin/bash
+          tty: true
+          stdin: true
+          volumeMounts:
+            - mountPath: /data
+              name: "data-dir"
+            - mountPath: /exp
+              name: "experiment-dir"
+            - mountPath: /scratch
+              subPath: "data"
+              name: "scratch-volume"
+            - mountPath: /dev/shm
+              subPath: "shm"
+              name: "scratch-volume"
+
+            - name: code-dir
+              mountPath: "/code"
+          resources:
+            {{ $resources | toYaml | nindent 12 }}
+      restartPolicy: OnFailure
+      volumes:
+        - name: code-dir
+          persistentVolumeClaim:
+            claimName: "{{ include "nemo-helm.fullname" . }}-code-pvc"
+        - name: scripts
+          configMap:
+            name: "{{ include "nemo-helm.fullname" . }}-scripts"
+            defaultMode: 0777
+        - name: data-dir
+          persistentVolumeClaim:
+            claimName: "{{ $fullName }}-trainer-data-pvc"
+        - name: experiment-dir
+          persistentVolumeClaim:
+            claimName: "{{ $fullName }}-trainer-experiments-pvc"
+        - name: scratch-volume
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes: [ "ReadWriteOnce" ]
+                # This storage class is how Kubernetes knows to give you an NVMe volume instead of a normal NFS volume
+                storageClassName: nvme-ephemeral
+                resources:
+                  requests:
+                    storage: {{ .Values.trainer.storage.scratchStorageSize }}
