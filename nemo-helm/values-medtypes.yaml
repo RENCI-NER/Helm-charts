@@ -27,13 +27,14 @@ trainer:
   resources:
     requests:
       cpu: 5
-      memory: 30Gi
+      memory: 59Gi
       ephemeral-storage: 10Gi
     limits:
       cpu: 5
-      memory: 50Gi
+      memory: 59Gi
       ephemeral-storage: 10Gi
-      nvidia.com/mig-3g.20gb: 1
+      nvidia.com/mig-2g.10gb: 1
+      nvidia.com/mig-3g.20gb: 0
 
   trainingSets:
     - https://stars.renci.org/var/ner/medmentions/medmentions-train.txt
@@ -48,10 +49,10 @@ trainer:
   storage:
     dataStorageSize: 10Gi
     experimentsStorageSize: 20Gi
-    scratchStorageSize: 100Gi
+    scratchStorageSize: 50Gi
     codeDirStorageSize: 1Gi
 jupyter:
-  enabled: true
+  enabled: false
 
   podAnnotations: {}
   podSecurityContext: {}
