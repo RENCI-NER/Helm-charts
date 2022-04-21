@@ -1,0 +1,103 @@
+# Default values for scigraph.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: renciorg/scigraph
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:   
+    cert-manager.io/cluster-issuer: letsencrypt
+    
+
+  hosts:
+    - host: scigraph.apps.renci.org
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: 
+   - secretName: scigraph.apps.renci.org-tls
+     hosts:
+       - scigraph.apps.renci.org
+
+resources: 
+  limits:
+    cpu: 1
+    memory: 19Gi
+  requests:
+    cpu: 250m
+    memory: 19Gi
+
+neo4jConfig:
+  dump_configuration : true
+  dbms.pagecache.memory : 6g
+  dbms.transaction.timeout: 2m
+  dbms.memory.heap.initial_size: 12G
+  dbms.memory.heap.max_size: 12G
+
+
+autoscaling:
+  enabled: false
+  # minReplicas: 1
+  # maxReplicas: 100
+  # targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+storage:
+  size: 4Gi
+
+
+initresources:
+  limits:
+    cpu: 1
+    memory: 4Gi
+  requests:
+    cpu: 250m
+    memory: 4Gi
+  
+
+dataUrl: "https://stars.renci.org/var/scigraph/scigraph-loaded-ds.tar.gz"

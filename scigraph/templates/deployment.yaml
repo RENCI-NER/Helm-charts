@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "scigraph.fullname" . }}
+  labels:
+    {{- include "scigraph.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "scigraph.fullname" . }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "scigraph.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "scigraph.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: {{ include "scigraph.fullname" . }}-data-loader
+          image: busybox:latest
+          env:
+            - name: SCIGRAPH_DATA_URL
+              value: {{ .Values.dataUrl }}
+          resources:
+            {{- toYaml .Values.initresources | nindent 12 }}
+          command: 
+           - /download_data.sh          
+          volumeMounts:
+            - mountPath: /data
+              name: {{ include "scigraph.fullname" . }}-data-pvc
+            - name : {{ include "scigraph.fullname" . }}-scripts
+              mountPath: /download_data.sh
+              subPath: download_data.sh   
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP          
+          command:
+            - ./start-scigraph-service 
+          args:
+            - monarchConfiguration.yaml
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}            
+          volumeMounts:
+            - mountPath: /data
+              name: {{ include "scigraph.fullname" . }}-data-pvc
+            - mountPath: /scigraph/conf/monarchConfiguration.yaml
+              name: {{ include "scigraph.fullname" . }}-monarch-configuration
+              subPath: monarchConfiguration.yaml
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: {{ include "scigraph.fullname" . }}-scripts
+          configMap:
+            name: {{ include "scigraph.fullname" . }}-scripts
+            defaultMode: 0777
+        - name: {{ include "scigraph.fullname" . }}-monarch-configuration
+          configMap:
+            name: {{ include "scigraph.fullname" . }}-monarch-configuration
+            defaultMode: 0777    
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ include "scigraph.fullname" . }}-data-pvc
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage.size }}

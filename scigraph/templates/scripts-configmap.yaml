@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "scigraph.fullname" . }}-scripts
+  labels:
+    {{- include "scigraph.labels" . | nindent 4 }}
+data:  
+  download_data.sh: |-
+    #!/bin/sh
+    set -xe
+    if [ -f "/data/done" ]; then
+      exit 0;
+    fi
+    cd /data/
+    wget -O archive.tar.gz $SCIGRAPH_DATA_URL
+    tar -xzf archive.tar.gz
+    touch /data/done
