@@ -15,7 +15,7 @@ spec:
       env:
         - name: PYTHONPATH
           value: "/data/code"
-      command: ["python", "/data/code/inference_on_pubmed.py"]
+      command: ["python", {{ .Values.inference.command }}]
       tty: true
       stdin: true  
       volumeMounts:
