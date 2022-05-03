@@ -6,9 +6,9 @@ replicaCount: 1
 
 image:
   repository: renci/nemo-sapbert
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.4.0"
+  tag: "22.01"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -20,12 +20,12 @@ inference:
       cpu: 2
       memory: 30Gi
       ephemeral-storage: 10Gi
-      nvidia.com/mig-3g.20gb: 1
+      nvidia.com/mig-2g.10gb: 1
     limits:
       cpu: 2
       memory: 50Gi
       ephemeral-storage: 10Gi
-      nvidia.com/mig-3g.20gb: 1
+      nvidia.com/mig-2g.10gb: 1
   command: "/data/code/inference_on_pubmed_gpu.py"     
   storage:
     dataStorageSize: 10Gi
