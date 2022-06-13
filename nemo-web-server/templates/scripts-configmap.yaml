@@ -1,0 +1,10 @@
+{{ $dataPath := include "modelPath" . | trim  }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nemo-web-server.fullname" . }}-scripts-configmap
+  labels:
+    {{- include "nemo-web-server.labels" . | nindent 4 }}
+data:
+  download.sh: |-
+    test -f {{ $dataPath }}${FILE_NAME} || wget -P {{ $dataPath }} ${URL}

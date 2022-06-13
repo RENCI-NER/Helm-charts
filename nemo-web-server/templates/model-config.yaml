@@ -1,0 +1,14 @@
+{{ $dataPath := include "modelPath" . | trim  }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nemo-web-server.fullname" . }}-model-configmap
+  labels:
+    {{- include "nemo-web-server.labels" . | nindent 4 }}
+data:
+  config.yaml: |-
+    {{ range $key, $value := .Values.modelConfig.models }}
+    {{ $key | nindent 4 }}:
+      {{ print "path: " $dataPath $value.fileName | nindent 6 }}
+      {{ print "class: " $value.class | nindent 6 }}
+    {{ end }}

@@ -1,0 +1,116 @@
+{{ $dataPath := include "modelPath" . | trim }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "nemo-web-server.fullname" . }}
+  labels:
+    {{- include "nemo-web-server.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "nemo-web-server.fullname" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "nemo-web-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "nemo-web-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      {{ if .Values.modelConfig.downloadModels }}
+      initContainers:
+        {{- range $key, $value := .Values.modelConfig.models }}
+        - name: {{ lower $key }}-downloader
+          image: busybox:1.35.0
+          imagePullPolicy: IfNotPresent
+          command:
+           - ash
+          args:
+          - /download.sh
+          env:
+          - name: FILE_NAME
+            value: {{ $value.fileName }}
+          - name: URL
+            value: {{ $value.repoUrl}}{{ $value.fileName }}
+          volumeMounts:
+          - name: models-pvc
+            mountPath: {{ $dataPath }}
+          - name: scripts-config
+            mountPath: /download.sh
+            subPath: download.sh
+        {{- end }}
+      {{ end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - 'uvicorn'
+          args:
+          - '--port'
+          - '8080'
+          - '--host'
+          - '0.0.0.0'
+          - src.server:app
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+#           livenessProbe:
+#             httpGet:
+#               path: /
+#               port: http
+#           readinessProbe:
+#             httpGet:
+#               path: /
+#               port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+          - name: model-config
+            mountPath: /var/web/nemo-serve/config.yaml
+            subPath: "config.yaml"
+          - name: models-pvc
+            mountPath: {{ $dataPath }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: model-config
+          configMap:
+            name: {{ include "nemo-web-server.fullname" . }}-model-configmap
+            defaultMode: 0777
+        - name: scripts-config
+          configMap:
+            name: {{ include "nemo-web-server.fullname" . }}-scripts-configmap
+            defaultMode: 0777
+  volumeClaimTemplates:
+    - metadata:
+        name: models-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.storage.size }}
