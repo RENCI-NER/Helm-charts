@@ -1,7 +1,7 @@
 {{- $fullName := include "nemo-sapbert-helm.fullname" . -}}
 {{- $image := .Values.image.repository }}
 {{- $imageTag := .Values.image.tag }}
-{{- $pullPolicy := .Values.imagePullPolicy }}
+{{- $pullPolicy := .Values.image.pullPolicy }}
 {{- $resources := .Values.inference.resources }}
 apiVersion: v1
 kind: Pod
@@ -11,11 +11,11 @@ spec:
   containers:
     - name: inference-container
       image: "{{ $image }}:{{ $imageTag }}"
-      imagePullPolicy: {{ $pullPolicy }}
+      imagePullPolicy: "{{ $pullPolicy }}"
       env:
         - name: PYTHONPATH
           value: "/data/code"
-      command: ["python", "/data/code/inference_on_pubmed.py"]
+      command: ["python", {{ .Values.inference.command }}]
       tty: true
       stdin: true  
       volumeMounts:
