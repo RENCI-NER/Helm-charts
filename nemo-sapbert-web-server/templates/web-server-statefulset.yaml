@@ -1,4 +1,3 @@
-{{ $dataPath := include "modelPath" . | trim }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -45,14 +44,9 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
-#           livenessProbe:
-#             httpGet:
-#               path: /
-#               port: http
-#           readinessProbe:
-#             httpGet:
-#               path: /
-#               port: http
+          env:
+            - name: LOG_LEVEL
+              value: debug
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
@@ -61,7 +55,7 @@ spec:
             mountPath: /var/web/nemo-serve/config.yaml
             subPath: "config.yaml"
           - name: sapbertdata
-            mountPath: {{ $dataPath }}
+            mountPath: /data
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
