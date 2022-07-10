@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.app.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.app.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    service-type: webserver
+spec:
+  serviceName: "oger"
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.app.name }}-deployment
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      service-type: webserver
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.app.name }}-deployment
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        service-type: webserver
+    spec:
+      containers:
+        - name: {{ .Values.app.name }}-server
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+              protocol: TCP
+          resources: {{ toYaml .Values.service.resources | nindent 12 }}

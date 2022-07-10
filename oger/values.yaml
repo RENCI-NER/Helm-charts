@@ -14,7 +14,13 @@ service:
       cpu: 1
     limits:
       memory: 24Gi
-      cpu: 3
+      cpu: 1
 
 ingress:
   host: oger.apps.renci.org
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+
+app:
+  name: oger
+  port: 8080
