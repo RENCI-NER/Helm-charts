@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: "ggvaidya/oger"
+  tag: "dev"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+  resources:
+    requests:
+      memory: 20Gi
+      cpu: 1
+    limits:
+      memory: 24Gi
+      cpu: 1
+
+ingress:
+  host: oger.apps.renci.org
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+
+app:
+  name: oger
+  port: 8080
