@@ -60,6 +60,9 @@ spec:
             - notebook
             - "--ip=*"
             - --NotebookApp.password={{ .Values.jupyter.password }}
+          env:
+          - name: "OMP_THREAD_COUNT"
+            value: "1024"
           ports:
             - name: http
               protocol: TCP
@@ -67,6 +70,9 @@ spec:
           volumeMounts:
             - name: code-dir
               mountPath: "/code/"
+            - name: code-dir
+              mountPath: "/workspace/nemo/notebooks"
+              subPath: "notebooks"
             - mountPath: /data
               name: "data-dir"
             - mountPath: /exp
