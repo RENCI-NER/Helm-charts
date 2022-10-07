@@ -3,6 +3,7 @@
 {{- $imageTag := .Values.image.tag }}
 {{- $pullPolicy := .Values.imagePullPolicy }}
 {{- $resources := .Values.trainer.resources }}
+{{ if .Values.trainer.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -19,7 +20,7 @@ spec:
           - "/download-data-set.sh"
           volumeMounts:
           - mountPath: /data
-            name: "scratch-volume"
+            name: "data-dir"
           - mountPath: /download-data-set.sh
             name: "scripts"
             subPath: "download-training-files.sh"
@@ -32,7 +33,7 @@ spec:
           args:
             - clone
             - {{ .Values.trainer.codeRepo }}
-            - "/code/"
+            - "/code/repo"
           volumeMounts:
             - name: code-dir
               mountPath: /code/
@@ -53,13 +54,6 @@ spec:
               name: "data-dir"
             - mountPath: /exp
               name: "experiment-dir"
-            - mountPath: /scratch
-              subPath: "data"
-              name: "scratch-volume"
-            - mountPath: /dev/shm
-              subPath: "shm"
-              name: "scratch-volume"
-
             - name: code-dir
               mountPath: "/code"
           resources:
@@ -79,13 +73,4 @@ spec:
         - name: experiment-dir
           persistentVolumeClaim:
             claimName: "{{ $fullName }}-trainer-experiments-pvc"
-        - name: scratch-volume
-          ephemeral:
-            volumeClaimTemplate:
-              spec:
-                accessModes: [ "ReadWriteOnce" ]
-                # This storage class is how Kubernetes knows to give you an NVMe volume instead of a normal NFS volume
-                storageClassName: nvme-ephemeral
-                resources:
-                  requests:
-                    storage: {{ .Values.trainer.storage.scratchStorageSize }}
+{{ end }}

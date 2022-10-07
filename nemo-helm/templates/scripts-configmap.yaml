@@ -5,9 +5,9 @@ metadata:
 data:
   download-training-files.sh: |-
     #!/bin/sh -x
-    export DATA_DIR="${DATA_DIR}:=/data"
+    export DATA_DIR=${DATA_DIR:-/data}
     {{ range .Values.trainer.trainingSets }}
-    wget --directory-prefix $DATA_DIR  $node_file_url
+    wget --directory-prefix $DATA_DIR  {{ . }}
     {{ end }}
     cd $DATA_DIR
     ls -al $DATA_DIR

@@ -15,6 +15,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 trainer:
+  enabled: false
   gitSync: false
   codeRepo: "https://github.com/RENCI-NER/nemo-ner.git"
   initResources:
@@ -36,20 +37,20 @@ trainer:
       nvidia.com/mig-3g.20gb: 1
 
   trainingSets:
-    - https://stars.renci.org/var/ner/medmentions/medmentions-train.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-train.labels.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-train.categories.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-dev.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-dev.labels.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-dev.categories.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-test.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-test.labels.txt
-    - https://stars.renci.org/var/ner/medmentions/medmentions-test.categories.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-train.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-train.labels.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-train.categories.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-dev.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-dev.labels.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-dev.categories.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-test.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-test.labels.txt
+#     - https://stars.renci.org/var/ner/medmentions/medmentions-test.categories.txt
   storage:
     dataStorageSize: 10Gi
     experimentsStorageSize: 20Gi
     scratchStorageSize: 100Gi
-    codeDirStorageSize: 1Gi
+    codeDirStorageSize: 5Gi
 jupyter:
   enabled: true
 
@@ -68,7 +69,7 @@ jupyter:
     port: 80
 
   ingress:
-    enabled: false
+    enabled: true
     className: ""
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
@@ -89,7 +90,7 @@ jupyter:
     limits:
       cpu: 2
       memory: 4Gi
-      nvidia.com/mig-1g.5gb: 1
+      nvidia.com/mig-3g.20gb: 1
       ephemeral-storage: 10Gi
     requests:
       cpu: 2
