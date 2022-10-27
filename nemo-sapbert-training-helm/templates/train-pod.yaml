@@ -1,0 +1,31 @@
+{{- $fullName := include "nemo-sapbert-helm.fullname" . -}}
+{{- $image := .Values.image.repository }}
+{{- $imageTag := .Values.image.tag }}
+{{- $pullPolicy := .Values.image.pullPolicy }}
+{{- $resources := .Values.train.resources }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ $fullName }}-sapbert-train-pod"
+spec:
+  containers:
+    - name: train-container
+      image: "{{ $image }}:{{ $imageTag }}"
+      imagePullPolicy: "{{ $pullPolicy }}"
+      env:
+        - name: PYTHONPATH
+          value: "/data/code"
+      command: ["sh", {{ .Values.train.command }}]
+      tty: true
+      stdin: true  
+      volumeMounts:
+        - mountPath: /data
+          name: sapbertdata
+      resources:
+        {{ $resources | toYaml | nindent 12 }}
+  restartPolicy: OnFailure
+  volumes:
+    - name: sapbertdata
+      persistentVolumeClaim:
+        claimName: sapbertdata
+
