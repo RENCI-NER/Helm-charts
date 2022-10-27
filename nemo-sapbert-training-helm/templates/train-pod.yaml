@@ -14,7 +14,7 @@ spec:
       imagePullPolicy: "{{ $pullPolicy }}"
       env:
         - name: PYTHONPATH
-          value: "/data/code"
+          value: "/data/code/train"
       command: ["sh", {{ .Values.train.command }}]
       tty: true
       stdin: true  
