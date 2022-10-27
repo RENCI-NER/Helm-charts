@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nemo-sapbert-web-server.fullname" . }}-model-configmap
+  labels:
+    {{- include "nemo-sapbert-web-server.labels" . | nindent 4 }}
+data:
+  config.yaml: |-
+    {{ range $key, $value := .Values.modelConfig.models }}
+    {{ $key | nindent 4 }}:
+      {{ print "path: " $value.fileName | nindent 6 }}
+      {{ print "class: " $value.class | nindent 6 }}
+      {{ print "ground_truth_data_path: " $value.ground_truth_data_path | nindent 6 }}
+      {{ print "ground_truth_data_ids_path: " $value.ground_truth_data_ids_path | nindent 6 }}
+    {{ end }}
