@@ -8,7 +8,7 @@ image:
   repository: ghcr.io/renci-ner/nemo-serve
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "v1.3.1"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -37,8 +37,6 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/enable-cors: "true"
     cert-manager.io/cluster-issuer: letsencrypt
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
   hosts:
     - host: med-nemo.apps.renci.org
       paths:
@@ -56,9 +54,9 @@ storage:
 modelConfig:
   downloadModels: true
   models:
-    tokenClassificationModel:
+    token_classification:
       repoUrl: "https://stars.renci.org/var/ner/models/"
-      fileName: "medmentions-v0.1.nemo"
+      fileName: "medmentions-v0.2.nemo"
       class: "TokenClassificationWrapper"
 
 resources:
@@ -68,9 +66,9 @@ resources:
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   limits:
-    cpu: 1
+    cpu: 12
     memory: 10Gi
-    nvidia.com/mig-3g.20gb: 1
+    nvidia.com/mig-1g.5gb: 1
     ephemeral-storage: 10Gi
 
   requests:
@@ -82,3 +80,12 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+annotate:
+  enabled: false
+  dataUrl: https://stars.renci.org/var/ner/pubmed/split_11.txt
+  modelName: token_classification
+  storage:
+    modelsStorageSize: 10Gi
+    dataStorageSize: 10Gi
+    devShm: 10Gi

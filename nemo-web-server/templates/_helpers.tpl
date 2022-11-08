@@ -52,3 +52,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{ define "modelPath" }}
 {{ print "/models/" }}
 {{ end }}
+{{ define "dataPath" }}
+{{ print "/data/" }}
+{{ end }}
