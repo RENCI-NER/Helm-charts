@@ -7,4 +7,6 @@ metadata:
     {{- include "nemo-web-server.labels" . | nindent 4 }}
 data:
   download.sh: |-
-    test -f {{ $dataPath }}${FILE_NAME} || wget -P {{ $dataPath }} ${URL}
+    export DATA_DIR=${DATA_DIR:-'{{ $dataPath }}'}
+    echo ${DATA_DIR}
+    test -f ${DATA_DIR}${FILE_NAME} || wget -P ${DATA_DIR} ${URL}

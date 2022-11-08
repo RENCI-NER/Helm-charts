@@ -1,4 +1,5 @@
-{{ $dataPath := include "modelPath" . | trim }}
+{{ if not .Values.annotate.enabled }}
+{{ $modelPath := include "modelPath" . | trim }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -19,6 +20,8 @@ spec:
       {{- end }}
       labels:
         {{- include "nemo-web-server.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/model-config.yaml") . | sha256sum }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -30,7 +33,7 @@ spec:
       {{ if .Values.modelConfig.downloadModels }}
       initContainers:
         {{- range $key, $value := .Values.modelConfig.models }}
-        - name: {{ lower $key }}-downloader
+        - name: {{ lower $key | replace "_" "-" }}-downloader
           image: busybox:1.35.0
           imagePullPolicy: IfNotPresent
           command:
@@ -44,7 +47,7 @@ spec:
             value: {{ $value.repoUrl}}{{ $value.fileName }}
           volumeMounts:
           - name: models-pvc
-            mountPath: {{ $dataPath }}
+            mountPath: {{ $modelPath }}
           - name: scripts-config
             mountPath: /download.sh
             subPath: download.sh
@@ -84,7 +87,7 @@ spec:
             mountPath: /var/web/nemo-serve/config.yaml
             subPath: "config.yaml"
           - name: models-pvc
-            mountPath: {{ $dataPath }}
+            mountPath: {{ $modelPath }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -114,3 +117,4 @@ spec:
         resources:
           requests:
             storage: {{ .Values.storage.size }}
+{{ end }}
