@@ -18,12 +18,12 @@ train:
   resources:
     limits:
       cpu: 2
-      memory: 50Gi
+      memory: 256Gi
       ephemeral-storage: 10Gi
       nvidia.com/mig-3g.20gb: 1
   command: "/data/code/train/pretrain.sh"
   storage:
-    dataStorageSize: 10Gi
+    dataStorageSize: 20Gi
     experimentsStorageSize: 20Gi
     scratchStorageSize: 100Gi
     codeDirStorageSize: 1Gi
