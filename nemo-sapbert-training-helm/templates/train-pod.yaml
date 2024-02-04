@@ -21,6 +21,8 @@ spec:
       volumeMounts:
         - mountPath: /data
           name: sapbertdata
+        - mountPath: /babeldata
+          name: babeldata
       resources:
         {{ $resources | toYaml | nindent 12 }}
   restartPolicy: OnFailure
@@ -28,4 +30,7 @@ spec:
     - name: sapbertdata
       persistentVolumeClaim:
         claimName: sapbertdata
+    - name: babeldata
+      persistentVolumeClaim:
+        claimName: babeldata
 
