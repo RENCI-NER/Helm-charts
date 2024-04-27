@@ -56,6 +56,10 @@ spec:
             subPath: "config.yaml"
           - name: sapbertdata
             mountPath: /data
+          - name: babeldata
+            mountPath: /babeldata
+          - name: babeldata2
+            mountPath: /babeldata2
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -76,3 +80,9 @@ spec:
         - name: sapbertdata
           persistentVolumeClaim:
             claimName: sapbertdata
+        - name: babeldata
+          persistentVolumeClaim:
+            claimName: babeldata
+        - name: babeldata2
+          persistentVolumeClaim:
+            claimName: babel-sapbert-pvc
