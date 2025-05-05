@@ -56,6 +56,12 @@ spec:
             subPath: "config.yaml"
           - name: sapbertdata
             mountPath: /data
+          - name: babeldata
+            mountPath: /babeldata
+          - name: babeldata2
+            mountPath: /babeldata2
+          - name: nfs
+            mountPath: "/projects/ner"  
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -76,3 +82,14 @@ spec:
         - name: sapbertdata
           persistentVolumeClaim:
             claimName: sapbertdata
+        - name: babeldata
+          persistentVolumeClaim:
+            claimName: babeldata
+        - name: babeldata2
+          persistentVolumeClaim:
+            claimName: babel-sapbert-pvc
+        - name: nfs
+          nfs:
+            server: na-projects.edc.renci.org
+            path: /ner
+            readOnly: true
