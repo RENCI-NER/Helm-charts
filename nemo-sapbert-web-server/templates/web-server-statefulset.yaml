@@ -60,6 +60,8 @@ spec:
             mountPath: /babeldata
           - name: babeldata2
             mountPath: /babeldata2
+          - name: nfs
+            mountPath: "/projects/ner"  
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -86,3 +88,8 @@ spec:
         - name: babeldata2
           persistentVolumeClaim:
             claimName: babel-sapbert-pvc
+        - name: nfs
+          nfs:
+            server: na-projects.edc.renci.org
+            path: /ner
+            readOnly: true

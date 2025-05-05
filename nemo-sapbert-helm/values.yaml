@@ -18,7 +18,7 @@ inference:
   resources:
     limits:
       cpu: 2
-      memory: 100Gi
+      memory: 300Gi
       ephemeral-storage: 10Gi
       nvidia.com/mig-3g.20gb: 1
   command: "/data/code/inference_on_babel_data_gpu.py"     
