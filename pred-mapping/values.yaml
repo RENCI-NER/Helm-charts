@@ -1,0 +1,44 @@
+replicaCount: 1
+
+image:
+  repository: containers.renci.org/translator/pred-mapping
+  tag: v1.0
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 6380
+
+env:
+  HOME: /tmp/pred_mapping
+  JINA_HOME: /tmp/pred_mapping/.jina
+
+volume:
+  name: cache-volume
+  mountPath: /tmp/.cache
+  size: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    cert-manager.io/cluster-issuer: letsencrypt
+  hosts:
+    - host: pred-mapping.apps.renci.org  
+      paths:
+       - path: /
+         pathType: ImplementationSpecific
+  tls:
+   - secretName: pred-mapping.apps.renci.org-tls
+     hosts:
+       - pred-mapping.apps.renci.org
+
+resources:
+  requests:
+    memory: 10Gi
+    cpu: "1"
+  limits:
+    memory: 10Gi
+    cpu: "1"
+

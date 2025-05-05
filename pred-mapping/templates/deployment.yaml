@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "pred-mapping.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "pred-mapping.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "pred-mapping.fullname" . }}
+    spec:
+      containers:
+        - name: pred-mapping
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 6380
+          env:
+            - name: HOME
+              value: {{ .Values.env.HOME }}
+            - name: JINA_HOME
+              value: {{ .Values.env.JINA_HOME }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}    
+          volumeMounts:
+            - name: {{ .Values.volume.name }}
+              mountPath: {{ .Values.volume.mountPath }}
+      volumes:
+        - name: {{ .Values.volume.name }}
+          persistentVolumeClaim:
+            claimName: cache-pvc
+
