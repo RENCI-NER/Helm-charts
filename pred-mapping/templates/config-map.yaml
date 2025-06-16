@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pred-mapping.fullname" . }}-configmap
+data:
+  HOME: "{{ .Values.env.HOME }}"
+  JINA_HOME: "{{ .Values.env.JINA_HOME }}"
+  LLM_API_URL: "{{ .Values.env.LLM_API_URL }}"
+  CHAT_MODEL: "{{ .Values.env.CHAT_MODEL }}"
+  EMBEDDING_URL: "{{ .Values.env.EMBEDDING_URL }}"
+  EMBEDDING_MODEL: "{{ .Values.env.EMBEDDING_MODEL }}"
+

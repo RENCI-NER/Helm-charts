@@ -18,11 +18,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 6380
-          env:
-            - name: HOME
-              value: {{ .Values.env.HOME }}
-            - name: JINA_HOME
-              value: {{ .Values.env.JINA_HOME }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "pred-mapping.fullname" . }}-configmap    
           resources:
             {{- toYaml .Values.resources | nindent 12 }}    
           volumeMounts:

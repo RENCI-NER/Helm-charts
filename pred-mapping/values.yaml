@@ -1,9 +1,9 @@
 replicaCount: 1
 
 image:
-  repository: containers.renci.org/translator/pred-mapping
-  tag: v1.0
-  pullPolicy: IfNotPresent
+  repository: containers.renci.org/translator-dev/pred-mapping
+  tag: v0.1
+  pullPolicy: Always # IfNotPresent
 
 service:
   type: ClusterIP
@@ -12,6 +12,10 @@ service:
 env:
   HOME: /tmp/pred_mapping
   JINA_HOME: /tmp/pred_mapping/.jina
+  LLM_API_URL: https://healpaca.apps.renci.org/api/generate
+  CHAT_MODEL: HEALpaca-2.0
+  EMBEDDING_URL: https://healpaca.apps.renci.org/api/embeddings
+  EMBEDDING_MODEL: nomic-embed-text
 
 volume:
   name: cache-volume
@@ -37,7 +41,7 @@ ingress:
 resources:
   requests:
     memory: 10Gi
-    cpu: "1"
+    cpu: "500m"
   limits:
     memory: 10Gi
     cpu: "1"
