@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: containers.renci.org/translator-dev/pred-mapping
-  tag: v0.2
+  tag: latest
   pullPolicy: IfNotPresent
 
 service:
