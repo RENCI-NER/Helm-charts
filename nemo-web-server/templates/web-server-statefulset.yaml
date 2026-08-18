@@ -6,22 +6,24 @@ metadata:
   name: {{ include "nemo-web-server.fullname" . }}
   labels:
     {{- include "nemo-web-server.labels" . | nindent 4 }}
+    app: web-server
 spec:
   serviceName: {{ include "nemo-web-server.fullname" . }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "nemo-web-server.selectorLabels" . | nindent 6 }}
+      app: web-server
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/model-config.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "nemo-web-server.selectorLabels" . | nindent 8 }}
-      annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/model-config.yaml") . | sha256sum }}
+        app: web-server
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -71,6 +73,15 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          env:
+          # torch sizes its thread pool from the host's core count, not the
+          # cgroup CPU limit. On a 96-core node with a 4-CPU limit that is 48
+          # OpenMP threads over 4 CPUs of quota: 880ms per SapBERT forward pass
+          # vs 56ms at 4 threads. Keep this in step with resources.limits.cpu.
+          - name: OMP_NUM_THREADS
+            value: {{ .Values.torchThreads | quote }}
+          - name: MKL_NUM_THREADS
+            value: {{ .Values.torchThreads | quote }}
 #           livenessProbe:
 #             httpGet:
 #               path: /
@@ -88,6 +99,11 @@ spec:
             subPath: "config.yaml"
           - name: models-pvc
             mountPath: {{ $modelPath }}
+          - name: tmp
+            mountPath: /tmp
+          - name: shm
+            mountPath: /dev/shm
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -109,6 +125,12 @@ spec:
           configMap:
             name: {{ include "nemo-web-server.fullname" . }}-scripts-configmap
             defaultMode: 0777
+        - name: shm
+          emptyDir:
+            medium: Memory
+        - name: tmp
+          emptyDir:
+            medium: Memory
   volumeClaimTemplates:
     - metadata:
         name: models-pvc
@@ -117,4 +139,12 @@ spec:
         resources:
           requests:
             storage: {{ .Values.storage.size }}
+{{/*    - metadata:*/}}
+{{/*        name: tmp*/}}
+{{/*      spec:*/}}
+{{/*        accessModes: [ "ReadWriteOnce" ]*/}}
+{{/*        resources:*/}}
+{{/*          requests:*/}}
+{{/*            storage: {{ .Values.storage.size }}*/}}
+
 {{ end }}

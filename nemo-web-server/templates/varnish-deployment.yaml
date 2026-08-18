@@ -1,0 +1,64 @@
+{{ if .Values.varnish_cache.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nemo-web-server.fullname" . }}-varnish-cache
+  labels:
+    {{- include "nemo-web-server.labels" . | nindent 4 }}
+    app: varnish-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "nemo-web-server.labels" . | nindent 6 }}
+      app: varnish-cache
+  template:
+    metadata:
+      labels:
+        {{- include "nemo-web-server.labels" . | nindent 8 }}
+        app: varnish-cache
+    spec:
+      initContainers:
+        - name: {{ include "nemo-web-server.fullname" .}}-wait
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - >
+              set -x;
+              echo $(wget --spider -S "http://{{ include "nemo-web-server.fullname" . }}:{{ .Values.service.port }}/docs" 2>&1 | grep "HTTP/" | awk '{print $2}');
+              while [ $(wget --spider -S "http://{{ include "nemo-web-server.fullname" . }}:{{ .Values.service.port }}/docs" 2>&1 | grep "HTTP/" | awk '{print $2}') -ne 200 ]; do
+                echo "Waiting for {{ include "nemo-web-server.fullname" . }}";
+                sleep 1;
+              done;
+              echo "Connected ... ";
+      containers:
+        - name: {{ include "nemo-web-server.fullname" . }}-varnish-cache
+          image: {{ .Values.varnish_cache.image.repository }}:{{ .Values.varnish_cache.image.tag }}
+          ports:
+          - containerPort: 8080
+            name: http
+          env:
+            - name: VARNISH_SIZE
+              value: {{ .Values.varnish_cache.size }}
+          resources:
+            {{ .Values.varnish_cache.resources | toYaml | nindent 12 }}
+          volumeMounts:
+
+            - name: vcl-config
+              mountPath: /etc/varnish/default.vcl
+              subPath: default.vcl
+            - name: vcl-config
+              mountPath: /etc/varnish/cache_post_requests.vcl
+              subPath: cache_post_requests.vcl
+
+      volumes:
+        - name: vcl-config
+          configMap:
+            name: {{ include "nemo-web-server.fullname" . }}-scripts-configmap
+            items:
+              - key: default_vcl
+                path: default.vcl
+              - key: cache_post_requests_vcl
+                path: cache_post_requests.vcl
+{{ end }}
