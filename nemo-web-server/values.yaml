@@ -5,10 +5,24 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/renci-ner/nemo-serve
+  repository: containers.renci.org/helxplatform/nemo-serve
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v1.3.1"
+  tag: "23.10"
+
+
+varnish_cache:
+  enabled: true
+  image:
+    repository: "containers.renci.org/helxplatform/varnish-cache"
+    tag: "stable"
+  resources:
+    limits:
+      memory: 5Gi
+      cpu: 1
+  size: 4g
+
+
 
 imagePullSecrets: []
 nameOverride: ""
@@ -38,26 +52,30 @@ ingress:
     nginx.ingress.kubernetes.io/enable-cors: "true"
     cert-manager.io/cluster-issuer: letsencrypt
   hosts:
-    - host: med-nemo.apps.renci.org
+    - host: sap-qdrant.apps.renci.org
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls:
-   - secretName: med-nemo.apps.renci.org-tls
+   - secretName: sap-qdrant.apps.renci.org-tls
      hosts:
-       - med-nemo.apps.renci.org
+       - sap-qdrant.apps.renci.org
 
 
 storage:
   size: 2Gi
 
+# Threads for the torch/OpenMP pool in the web server. Must be <=
+# resources.limits.cpu, otherwise threads thrash against the cgroup quota.
+torchThreads: 4
+
 modelConfig:
-  downloadModels: true
+  downloadModels: false
   models:
-    token_classification:
-      repoUrl: "https://stars.renci.org/var/ner/models/"
-      fileName: "medmentions-v0.2.nemo"
-      class: "TokenClassificationWrapper"
+#    token_classification:
+#      repoUrl: "https://stars.renci.org/var/ner/models/"
+#      fileName: "medmentions-v0.2.nemo"
+#      class: "TokenClassificationWrapper"
 
 resources:
 
@@ -68,7 +86,7 @@ resources:
   limits:
     cpu: 12
     memory: 10Gi
-    nvidia.com/mig-1g.5gb: 1
+#    nvidia.com/mig-1g.5gb: 1
     ephemeral-storage: 10Gi
 
   requests:
@@ -89,3 +107,18 @@ annotate:
     modelsStorageSize: 10Gi
     dataStorageSize: 10Gi
     devShm: 10Gi
+
+
+qdrant:
+  enabled: true
+q1:
+  config:
+    cluster:
+      enabled: False
+  resources:
+    limits:
+      memory: 25Gi
+  persistence:
+    size: 25Gi
+  ingress:
+    enabled: false
